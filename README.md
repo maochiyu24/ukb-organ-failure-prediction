@@ -5,9 +5,9 @@ prediction of severe organ failure: a UK Biobank cohort study with external vali
 
 Repository: <https://github.com/maochiyu24/ukb-organ-failure-prediction>
 
-The repository contains the full analysis pipeline (data preparation -> feature ranking ->
-LightGBM models -> multimodal fusion -> survival evaluation -> causal mediation -> GO/PPI
-annotation) and the scripts that generate every main and supplementary figure and table.
+The repository contains the full analysis pipeline (data preparation, feature ranking, LightGBM
+models, multimodal fusion, survival evaluation, causal mediation and GO/PPI annotation) and the
+scripts that generate the main and supplementary figures and tables.
 
 ---
 
@@ -19,7 +19,7 @@ annotation) and the scripts that generate every main and supplementary figure an
 | Outcomes | Incident severe failure of six organ systems (heart, respiratory, liver, kidney, haematological, stroke) and the composite *any organ failure* |
 | Follow-up | Median 13.7 years; censoring 31 October 2022 |
 | Events | 52,283 any organ failure (10.6%); kidney 24,800; heart 16,616; stroke 12,064; respiratory 8,283; haematological 5,690; liver 2,722 |
-| Development / external validation | England (437,461) -> Scotland and Wales (55,443) |
+| Development / external validation | England (437,461) and Scotland plus Wales (55,443) |
 | Data domains | Proteomics, NMR metabolomics, blood biochemistry, polygenic risk scores, family history, lifestyle, psychosocial (imaging exploratory only) |
 | Multimodal fusion cohort | Seven-domain measurement intersection: 29,370 (26,871 / 2,499) |
 | Mediation cohort | 45,718 English participants with complete exposure, mediator and covariate data (proteomics panel) |
@@ -32,52 +32,46 @@ annotation) and the scripts that generate every main and supplementary figure an
 ```text
 .
 |-- README.md
-|-- LICENSE                      MIT
+|-- LICENSE
 |-- CITATION.cff
-|-- requirements.txt             pinned Python packages (Python 3.11.6)
-|-- environment.yml              conda environment (incl. R 4.5 / r-mediation)
+|-- requirements.txt
+|-- environment.yml
 |-- docs/
-|   |-- REPRODUCIBILITY.md       software versions, seeds, parameters
+|   |-- REPRODUCIBILITY.md
 |   `-- GITHUB_UPLOAD_WORKFLOW.md
 |-- tools/
-|   |-- run_all.sh               end-to-end example run
-|   `-- make_manuscript_docx.py  assembles the manuscript from Markdown sources
+|   |-- run_all.sh
+|   `-- make_manuscript_docx.py
 `-- src/
-    |-- config.py                central paths / ICD definitions / model parameters
-    |-- naming.py                display-name utilities (organs, proteins, metabolites)
-    |-- style.py                 shared figure style
-    |-- delong.py                DeLong test implementation
-    |-- 00_check_labels.py       label-consistency checks against the diagnosis matrix
-    |-- 00_tune/                 per-modality LightGBM tuning
-    |-- 01_prep/                 build per-modality analysis matrices (incident-only labels)
-    |-- 02_ranking/              clustering -> single-feature AUC -> SHAP/gain -> DeLong forward selection
-    |-- 03_model/                per organ x domain LightGBM models and external validation
-    |-- 04_fusion/               multimodal fusion models (seven-domain intersection cohort)
-    |-- 05_survival/             survival data build, C-index/tdAUC, KM, subgroup analyses
-    |-- 06_mediation/            exposure scores, mediation models, E-values
-    |-- figures/                 Fig. 1-5 and Fig. S1-S4 generation/assembly
-    `-- tables/                  Table 1 and supplementary tables S1-S7
+    |-- config.py
+    |-- naming.py
+    |-- style.py
+    |-- delong.py
+    |-- 00_check_labels.py
+    |-- 00_tune/
+    |-- 01_prep/
+    |-- 02_ranking/
+    |-- 03_model/
+    |-- 04_fusion/
+    |-- 05_survival/
+    |-- 06_mediation/
+    |-- figures/
+    `-- tables/
 ```
+
+`src/config.py` holds analysis constants, ICD definitions and model parameters.
 
 ---
 
-## 3. Data access and input files
+## 3. Data
 
 The UK Biobank data are **not** included in this repository and cannot be redistributed. Access
 requires an approved UK Biobank application; this study was conducted under **UK Biobank
-Application 347405**.
+Application 347405**. No participant-level data are included or publicly available.
 
-Input files are read from the project root; the exact paths expected by each script are defined in
-`src/config.py` (modality matrices, diagnosis matrix, baseline characteristics, hospital diagnoses,
-death register and region classification). The pipeline expects a project root that contains the
-data tree:
-
-```text
-$UKB_PROJECT_ROOT/
-|-- xm/            # UK Biobank-derived inputs (paths defined in src/config.py)
-|-- result/        # analysis outputs
-`-- cache/         # intermediate caches created by the pipeline
-```
+The code is designed to run against a local, access-controlled analysis environment. Input files
+must be obtained by the user through UK Biobank; no data or project-specific paths are shipped with
+this repository.
 
 ---
 
@@ -98,37 +92,16 @@ conda activate ukb-organ-failure
 
 ---
 
-## 5. Configuration
+## 5. Running the pipeline
 
-All paths are controlled by environment variables (see `src/config.py`):
-
-| Variable | Meaning | Default |
-|---|---|---|
-| `UKB_PROJECT_ROOT` | Project root containing `xm/`, `result/` and `cache/` | parent directory of the repository |
-| `UKB_XM_DIR` | Directory with UK Biobank-derived inputs | `$UKB_PROJECT_ROOT/xm` |
-| `OF_RESULT_DIR` | Directory for pipeline outputs (mirrors `result/of903`) | `$UKB_PROJECT_ROOT/result/of903` |
-| `OF_INCIDENT_ONLY` | Use incident-only labels with a one-year lag (`1`, the analysis used in the paper) | `1` |
-
-Example:
-
-```bash
-export UKB_PROJECT_ROOT=/data/ukb_organ_failure
-export OF_RESULT_DIR=$UKB_PROJECT_ROOT/result/of903
-export OF_INCIDENT_ONLY=1
-```
-
----
-
-## 6. Running the pipeline
-
-The scripts are intended to be run in order; each stage reads the previous stage's outputs from
-`$OF_RESULT_DIR`. Approximate runtimes assume 28 CPU cores.
+Run the scripts in order from the repository root. Each stage consumes the outputs of the preceding
+stage from the local analysis workspace configured by the user.
 
 ```bash
 # 1) per-modality analysis matrices (incident-only labels, one-year lag)
 python src/01_prep/prep_data.py
 
-# 2) feature ranking and DeLong forward selection (per organ x domain)
+# 2) feature ranking and DeLong forward selection
 python src/02_ranking/feature_ranking.py            # use --organ/--modality for parallel runs
 
 # 3) per-modality LightGBM models and external validation
@@ -143,29 +116,27 @@ python src/05_survival/02_survival_metrics.py
 python src/05_survival/02b_merge_survival_metrics.py
 python src/05_survival/06_subgroup.py
 
-# 6) causal mediation (exposure scores -> circulating mediators -> organ outcomes)
+# 6) causal mediation
 python src/06_mediation/09_build_exposure_v2.py
 python src/06_mediation/10_prep_mediation_v2.py
-Rscript src/06_mediation/run_mediation_v2.R          # see docs; runs per organ in parallel
+Rscript src/06_mediation/run_mediation_v2.R
 python src/06_mediation/08_mediation_evalue.py
 
 # 7) figures and tables
-python src/figures/fig1_panels_runin.py              # final Fig. 1 panels (run-in basis)
-python src/figures/fig3_performance.py               # Fig. 3
-python src/figures/fig5_subgroup_metrics.py          # subgroup cache for Fig. 5C/D
-python src/figures/fig5cd_subgroup_forest.py         # Fig. 5C/D and Fig. S4G/H
-python src/tables/gen_table_s1.py                    # Table S1
-python src/tables/gen_tables_supplementary.py        # Tables S2-S5
+python src/figures/fig1_panels_runin.py
+python src/figures/fig3_performance.py
+python src/figures/fig5_subgroup_metrics.py
+python src/figures/fig5cd_subgroup_forest.py
+python src/tables/gen_table_s1.py
+python src/tables/gen_tables_supplementary.py
 ```
 
-A convenience wrapper is provided in `tools/run_all.sh`. The figure scripts are deliberately
-independent (each writes a single panel/PDF+PNG) so that individual panels can be regenerated; the
-output paths mirror the original project layout (`$UKB_PROJECT_ROOT/result/result906/panels`,
-`figures_supp`, `tables`).
+A convenience wrapper is provided in `tools/run_all.sh`. Figure scripts are independent so that
+individual panels can be regenerated.
 
 ---
 
-## 7. Reproducibility notes
+## 6. Reproducibility notes
 
 * Random seed **42** throughout (cross-validation, bootstrap); all confidence intervals use
   **1,000 bootstrap resamples**.
@@ -184,14 +155,14 @@ output paths mirror the original project layout (`$UKB_PROJECT_ROOT/result/resul
 
 ---
 
-## 8. Citation
+## 7. Citation
 
 If you use this code, please cite the manuscript (citation will be updated on publication) and this
 repository; a `CITATION.cff` file is provided.
 
 ---
 
-## 9. Licence and contact
+## 8. Licence and contact
 
 Released under the MIT Licence (see `LICENSE`). Data use is governed by the UK Biobank access terms.
 Questions: yilitao0420@163.com; ffjin@njucm.edu.cn.
