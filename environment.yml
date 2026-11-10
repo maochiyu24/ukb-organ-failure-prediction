@@ -1,0 +1,11 @@
+name: ukb-organ-failure
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - r-base=4.5
+  - r-mediation=4.5.1
+  - pip
+  - pip:
+      - -r requirements.txt
