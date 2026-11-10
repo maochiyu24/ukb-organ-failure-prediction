@@ -1,11 +1,27 @@
-﻿cff-version: 1.2.0
+cff-version: 1.2.0
 message: "If you use this code, please cite the manuscript and this repository."
 type: software
 title: "Multi-domain pre-clinical prediction of severe organ failure (UK Biobank)"
 version: 1.0.0
-date-released: "2026-11-03"
+date-released: "2026-11-10"
 license: MIT
 authors:
-  - name: "[Author list to be completed]"
+  - family-names: Ma
+    given-names: Chiyuan
+  - family-names: Xu
+    given-names: Ruizhi
+  - family-names: Wei
+    given-names: Xiaodong
+  - family-names: Wang
+    given-names: Jiajia
+  - family-names: Zhang
+    given-names: Xiaoshan
+  - family-names: Wang
+    given-names: Tong
+  - family-names: Han
+    given-names: Yiyuan
+  - family-names: Tao
+    given-names: Yili
+  - family-names: Jin
+    given-names: Fangfang
 repository-code: "https://github.com/maochiyu24/ukb-organ-failure-prediction"
-
